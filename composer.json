@@ -1,0 +1,16 @@
+{
+    "name": "weasty/similar",
+    "type": "library",
+    "description": "Weasty similar",
+    "license": "MIT",
+    "authors": [
+        {"name": "ja1cap", "email": "ja1cap@me.com"}
+    ],
+    "require": {
+        "php": ">=5.4",
+        "adaptive/php-text-difference": "1.0.3"
+    },
+    "autoload": {
+        "psr-0": { "Weasty\\Similar\\": "lib/" }
+    }
+}
