@@ -10,7 +10,12 @@
         "php": ">=5.4",
         "adaptive/php-text-difference": "1.0.3"
     },
+    "require-dev": {
+        "phpunit/phpunit": "4.3.*",
+        "phpunit/php-invoker": "*",
+        "ext-xdebug" : "2.2.*"
+    },
     "autoload": {
-        "psr-0": { "Weasty\\Similar\\": "lib/" }
+        "psr-4": { "Weasty\\Similar\\": "lib/" }
     }
 }

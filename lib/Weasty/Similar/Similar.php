@@ -7,4 +7,6 @@ namespace Weasty\Similar;
  */
 class Similar {
 
+
+
 } 
