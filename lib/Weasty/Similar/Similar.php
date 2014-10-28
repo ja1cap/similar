@@ -52,7 +52,7 @@ class Similar {
      */
     public function search($query)
     {
-        return explode(',', $this->getCache()->fetch($query));
+        return array_filter(explode(',', $this->getCache()->fetch($query)));
     }
 
     /**

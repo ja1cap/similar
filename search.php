@@ -1,4 +1,5 @@
 <?php
+
 require 'vendor/autoload.php';
 
 $cacheDriver = new \Weasty\Similar\Cache\MultiCache();
@@ -11,24 +12,8 @@ $cacheDriver->addCacheProvider($fileCacheDriver);
 
 $cacheDriver->setNamespace('__SIMILAR__');
 
-$haystackFilePath = __DIR__ . '/data/main.txt';
 $similar = new \Weasty\Similar\Similar();
+$similar->setCache($cacheDriver);
 
-$similar
-    ->setCache($cacheDriver)
-    ->buildSimilar($haystackFilePath)
-;
-
-$haystackFileContent = @file_get_contents($haystackFilePath);
-$haystack = preg_split('/\r\n|\r|\n/', $haystackFileContent);
-
-$count = 1;
-foreach($haystack as $query){
-
-    $similarities = $similar->search($query);
-    if($similarities){
-        $count++;
-        echo sprintf('%s - %s - %s', $query, count($similarities), $count) . PHP_EOL;
-    }
-
-}
+$query = $argv[1];
+echo json_encode($similar->search($query));
