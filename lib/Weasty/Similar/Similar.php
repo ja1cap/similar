@@ -2,6 +2,9 @@
 namespace Weasty\Similar;
 
 use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Cache\FilesystemCache;
+use Weasty\Similar\Cache\MultiCache;
+use Weasty\Similar\Cache\SQLiteCache;
 use Weasty\Similar\Finder\SimilarFinder;
 
 /**
@@ -14,6 +17,25 @@ class Similar {
      * @var \Doctrine\Common\Cache\Cache
      */
     protected $cache;
+
+    function __construct()
+    {
+        $rootDir = realpath(__DIR__ . '/../../../');
+
+        $cacheDir = $rootDir . '/cache';
+        $cacheDriver = new MultiCache();
+
+        $sqlLiteCacheDriver = new SQLiteCache($rootDir . '/cache.sqlite');
+        $cacheDriver->addCacheProvider($sqlLiteCacheDriver);
+
+        $fileCacheDriver = new FilesystemCache($cacheDir, '.similar_cache.data');
+        $cacheDriver->addCacheProvider($fileCacheDriver);
+
+        $cacheDriver->setNamespace('__SIMILAR__');
+
+        $this->cache = $cacheDriver;
+
+    }
 
     /**
      * @param string $haystackFilePath
