@@ -1,5 +1,7 @@
 <?php
 namespace Weasty\Similar;
+
+use Doctrine\Common\Cache\ArrayCache;
 use Weasty\Similar\Finder\SimilarFinder;
 
 /**
@@ -9,39 +11,66 @@ use Weasty\Similar\Finder\SimilarFinder;
 class Similar {
 
     /**
-     * @var string
+     * @var \Doctrine\Common\Cache\Cache
      */
-    protected $haystackFilePath;
+    protected $cache;
 
-    function __construct($haystackFilePath)
+    /**
+     * @param string $haystackFilePath
+     * @return $this
+     */
+    public function buildSimilar($haystackFilePath)
     {
-        $this->haystackFilePath = $haystackFilePath;
-    }
 
-    public function groupSimilar(){
-
-        $haystackFileContent = @file_get_contents($this->haystackFilePath);
-        $haystack = $haystack = preg_split('/\r\n|\r|\n/', $haystackFileContent);
+        $haystackFileContent = @file_get_contents($haystackFilePath);
+        $haystack = preg_split('/\r\n|\r|\n/', $haystackFileContent);
+        $haystack = array_unique(array_filter($haystack));
 
         $finder = new SimilarFinder($haystack);
 
-        $i = 0;
+        $count = 0;
+        $total = count($haystack);
+
         foreach($haystack as $value){
 
-            $i++;
+            $count++;
 
             $similarities = $finder->find($value);
+            $this->getCache()->save($value, implode(',', $similarities));
 
-            echo $value . PHP_EOL;
-            var_dump($similarities);
-            echo '----------' . PHP_EOL;
-
-            if($i == 3){
-                break;
-            }
+            echo sprintf('%s/%s %s - %s', $count, $total, $value, count($similarities)) . PHP_EOL;
 
         }
 
+        return $this;
+
+    }
+
+    /**
+     * @param string $query
+     * @return array
+     */
+    public function search($query)
+    {
+        return explode(',', $this->getCache()->fetch($query));
+    }
+
+    /**
+     * @return \Doctrine\Common\Cache\Cache
+     */
+    public function getCache()
+    {
+        return $this->cache ?: new ArrayCache();
+    }
+
+    /**
+     * @param \Doctrine\Common\Cache\Cache $cache
+     * @return $this
+     */
+    public function setCache($cache)
+    {
+        $this->cache = $cache;
+        return $this;
     }
 
 } 
