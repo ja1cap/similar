@@ -2,10 +2,11 @@
 namespace Weasty\Similar;
 
 use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Cache\Cache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Weasty\Similar\Cache\MultiCache;
-use Weasty\Similar\Cache\SQLiteCache;
-use Weasty\Similar\Finder\SimilarFinder;
+use Weasty\Similar\Index\File\SimilarFileIndex;
+use Weasty\Similar\Index\Sphinx\SimilarSphinxIndex;
 
 /**
  * Class Similar
@@ -18,22 +19,34 @@ class Similar {
      */
     protected $cache;
 
-    function __construct()
+    /**
+     * @var \Weasty\Similar\Index\SimilarIndexInterface[]
+     */
+    protected $indexes = [];
+
+    function __construct($cacheDriver = null)
     {
         $rootDir = realpath(__DIR__ . '/../../../');
 
-        $cacheDir = $rootDir . '/cache';
-        $cacheDriver = new MultiCache();
+        if(!$cacheDriver instanceof Cache){
 
-        $sqlLiteCacheDriver = new SQLiteCache($rootDir . '/cache.sqlite');
-        $cacheDriver->addCacheProvider($sqlLiteCacheDriver);
+            $cacheDriver = new MultiCache();
 
-        $fileCacheDriver = new FilesystemCache($cacheDir, '.similar_cache.data');
-        $cacheDriver->addCacheProvider($fileCacheDriver);
+            //$sqlLiteCacheDriver = new SQLiteCache($rootDir . '/cache.sqlite');
+            //$cacheDriver->addCacheProvider($sqlLiteCacheDriver);
 
-        $cacheDriver->setNamespace('__SIMILAR__');
+            $cacheDir = $rootDir . '/cache';
+            $fileCacheDriver = new FilesystemCache($cacheDir, '.similar_cache.data');
+            $cacheDriver->addCacheProvider($fileCacheDriver);
+
+        }
 
         $this->cache = $cacheDriver;
+
+        $dataDir = $rootDir . '/data';
+        $haystackFilePath = $dataDir . '/main.txt';
+        $this->indexes[] = new SimilarFileIndex($haystackFilePath);
+        $this->indexes[] = new SimilarSphinxIndex();
 
     }
 
@@ -48,7 +61,7 @@ class Similar {
         $haystack = preg_split('/\r\n|\r|\n/', $haystackFileContent);
         $haystack = array_unique(array_filter($haystack));
 
-        $finder = new SimilarFinder($haystack);
+        $index = new SimilarFileIndex($haystack);
 
         $count = 0;
         $total = count($haystack);
@@ -57,7 +70,7 @@ class Similar {
 
             $count++;
 
-            $similarities = $finder->find($value);
+            $similarities = $index->search($value);
             $this->getCache()->save($value, implode(',', $similarities));
 
             echo sprintf('%s/%s %s - %s', $count, $total, $value, count($similarities)) . PHP_EOL;
@@ -74,7 +87,29 @@ class Similar {
      */
     public function search($query)
     {
-        return array_filter(explode(',', $this->getCache()->fetch($query)));
+
+        $results = $this->getCache()->fetch($query);
+
+        if($results){
+
+            $results = explode(',', $results);
+
+        } else {
+
+            $results = [];
+            foreach($this->indexes as $index){
+                foreach($index->search($query) as $result){
+                    $results[] = $result;
+                }
+            }
+
+            $results = array_filter(array_unique($results));
+            $this->getCache()->save($query, implode(',', $results));
+
+        }
+
+        return $results;
+
     }
 
     /**

@@ -8,6 +8,7 @@
     ],
     "require": {
         "php": ">=5.4",
+        "foolz/sphinxql-query-builder": "*",
         "doctrine/cache": "*"
     },
     "require-dev": {

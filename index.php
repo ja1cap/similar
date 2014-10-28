@@ -1,11 +1,15 @@
 <?php
 require 'vendor/autoload.php';
 
-$similar = new \Weasty\Similar\Similar();
+$memcache = new Memcache();
+$memcache->connect('127.0.0.1', 11211);
+
+$cacheDriver = new \Doctrine\Common\Cache\MemcacheCache();
+$cacheDriver->setMemcache($memcache);
+
+$similar = new \Weasty\Similar\Similar($cacheDriver);
 
 $haystackFilePath = __DIR__ . '/data/main.txt';
-$similar->buildSimilar($haystackFilePath);
-
 $haystackFileContent = @file_get_contents($haystackFilePath);
 $haystack = preg_split('/\r\n|\r|\n/', $haystackFileContent);
 
