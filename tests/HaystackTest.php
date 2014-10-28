@@ -1,13 +1,9 @@
 <?php
 
-namespace Weasty\Similar\Tests;
-
-use PHPUnit_Framework_TestCase;
 use Weasty\Similar\Finder\SimilarFinder;
 
 /**
  * Class HaystackTest
- * @package Weasty\Similar\Tests
  */
 class HaystackTest extends PHPUnit_Framework_TestCase
 {
@@ -17,7 +13,7 @@ class HaystackTest extends PHPUnit_Framework_TestCase
      */
     protected function getFilePath()
     {
-        return realpath(__DIR__ . '/../../../../data/fruits.txt');
+        return realpath(__DIR__ . '/../data/fruits.txt');
     }
 
     /**
@@ -35,18 +31,19 @@ class HaystackTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param $haystack
+     * @param $haystackFileContent
      * @depends testHaystackFile
      */
-    public function testHaystack($haystack)
+    public function testHaystack($haystackFileContent)
     {
 
+        $haystack = preg_split('/\r\n|\r|\n/', $haystackFileContent);
         $this->assertNotEmpty($haystack, 'Empty haystack');
 
         $similarFinder = new SimilarFinder($haystack);
-        //$similarValues = $similarFinder->find('fruit');
+        $similarValues = $similarFinder->find('fruit');
 
-        //var_dump($similarValues);
+        $this->assertTrue(is_array($similarValues));
 
     }
 

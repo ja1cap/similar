@@ -16,6 +16,6 @@
         "ext-xdebug" : "2.2.*"
     },
     "autoload": {
-        "psr-4": { "Weasty\\Similar\\": "lib/" }
+        "psr-4": { "Weasty\\Similar\\": "lib/Weasty/Similar" }
     }
 }

@@ -1,5 +1,6 @@
 <?php
 namespace Weasty\Similar\Finder;
+use Weasty\Similar\Index\SimilarIndex;
 
 /**
  * Class SimilarFinder
@@ -13,6 +14,11 @@ class SimilarFinder {
     protected $haystack;
 
     /**
+     * @var
+     */
+    protected $haystackIndex;
+
+    /**
      * @var array
      */
     protected $needleSimilarValueKeys;
@@ -23,8 +29,17 @@ class SimilarFinder {
     function __construct($haystack)
     {
 
+        if(is_array($haystack)){
+            array_filter($haystack);
+        }
+
         $this->haystack = $haystack;
+
+        $this->haystackIndex = new SimilarIndex($haystack);
+        $this->haystackIndex->build();
+
         $this->needleSimilarValueKeys = [];
+
         $this->init();
 
     }
@@ -37,31 +52,12 @@ class SimilarFinder {
 
     /**
      * @param string $needle
-     * @param float|int $similarMinPercent
+     * @param float|int $similarityMinPercent
      * @return array
      */
-    protected function _findSimilarValueKeys($needle, $similarMinPercent = 75.0)
+    protected function _findSimilarValueKeys($needle, $similarityMinPercent = 70.0)
     {
-
-        $similarValueKeys = [];
-
-        foreach($this->haystack as $key => $comparisonValue){
-
-            if($comparisonValue == $needle){
-                continue;
-            }
-
-            $comparisonValuePercent = 0;
-            similar_text($needle, $comparisonValue, $comparisonValuePercent);
-
-            if($comparisonValuePercent >= $similarMinPercent){
-                $similarValueKeys[] = $key;
-            }
-
-        }
-
-        return $similarValueKeys;
-
+        return $this->haystackIndex->find($needle, $similarityMinPercent);
     }
 
     /**
@@ -69,7 +65,7 @@ class SimilarFinder {
      * @return array
      */
     protected function _findSimilarValuesByKeys($keys){
-        return array_intersect_key($this->haystack, $keys);
+        return array_intersect_key($this->haystack, array_flip($keys));
     }
 
     /**
@@ -78,10 +74,16 @@ class SimilarFinder {
      */
     public function find($needle)
     {
+
         if(!isset($this->needleSimilarValueKeys[$needle])){
             $this->needleSimilarValueKeys[$needle] = $this->_findSimilarValueKeys($needle);
         }
-        return $this->_findSimilarValuesByKeys($this->needleSimilarValueKeys[$needle]);
+
+        $results = $this->_findSimilarValuesByKeys($this->needleSimilarValueKeys[$needle]);
+        array_unique($results);
+
+        return $results;
+
     }
 
 }
