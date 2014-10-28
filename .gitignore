@@ -1,6 +1,6 @@
 .idea/
 vendor/
-cache/
+cache/*
 config/sphinx.conf
 composer.phar
 composer.lock
