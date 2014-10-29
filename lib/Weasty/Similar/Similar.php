@@ -103,7 +103,11 @@ class Similar {
                 }
             }
 
+            $results = array_map(function($result){
+                return str_replace(array("\r\n", "\r", "\n", "\t"), ' ', $result);
+            }, $results);
             $results = array_filter(array_unique($results));
+
             $this->getCache()->save($query, implode(',', $results));
 
         }
