@@ -2,6 +2,7 @@
 namespace Weasty\Similar\Index\Sphinx;
 
 use Foolz\SphinxQL\Connection;
+use Foolz\SphinxQL\DatabaseException;
 use Foolz\SphinxQL\SphinxQL;
 use Weasty\Similar\Index\AbstractSimilarIndex;
 
@@ -21,8 +22,15 @@ class SimilarSphinxIndex extends AbstractSimilarIndex {
      */
     private function getConnection(){
         if(!$this->connection){
-            $this->connection = new Connection();
-            $this->connection->setParams(array('host' => 'localhost', 'port' => 19306));
+            try
+            {
+                $this->connection = new Connection();
+                $this->connection->setParams(array('host' => 'localhost', 'port' => 19306));
+            }
+            catch (DatabaseException $e)
+            {
+                $this->connection = null;
+            }
         }
         return $this->connection;
     }
@@ -34,18 +42,32 @@ class SimilarSphinxIndex extends AbstractSimilarIndex {
     public function search($query)
     {
 
+        if(!$this->getConnection()){
+            return [];
+        }
+
         $query = $this->prepareValue($query);
         if(!$query){
             return [];
         }
 
-        $spinxQuery = SphinxQL::create($this->getConnection())
-            ->select()
-            ->from('similarities')
-            ->match('keyword', $query)
-        ;
+        try
+        {
 
-        $results = array_map(function($result){ return $result['keyword']; }, $spinxQuery->execute());
+            $spinxQuery = SphinxQL::create($this->getConnection())
+                ->select()
+                ->from('similarities')
+                ->match('keyword', $query)
+            ;
+
+            $results = array_map(function($result){ return $result['keyword']; }, $spinxQuery->execute());
+
+        }
+        catch (DatabaseException $e)
+        {
+            $results = [];
+        }
+
         return $results;
 
     }
