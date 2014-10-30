@@ -45,7 +45,10 @@ class Similar {
 
         $dataDir = $rootDir . '/data';
         $haystackFilePath = $dataDir . '/main.txt';
-        $this->indexes[] = new SimilarFileIndex($haystackFilePath);
+        if(@file_exists($haystackFilePath)){
+            $this->indexes[] = new SimilarFileIndex($haystackFilePath);
+        }
+
         $this->indexes[] = new SimilarSphinxIndex();
 
     }
